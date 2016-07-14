@@ -1,0 +1,12 @@
+---
+- hosts: [all-hosts]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Update packages
+      apt: 
+        update_cache: yes 
+        install_recommends: yes
+        upgrade: safe
+...

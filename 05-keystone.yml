@@ -1,0 +1,89 @@
+---
+# Install Keystone
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/keystone-install.html
+#
+- hosts: [controllers]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files: 
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Install necessary packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        install_recommends: yes
+      with_items: "{{ keystone_packages }}"
+    - name: Create the keystone Database
+      mysql_db:
+        name: keystone
+        login_user: root
+        login_password: "{{ DB_PASS }}"
+    - name: Create the keystone user 
+      mysql_user:
+        name: keystone
+        password: "{{ KEYSTONE_DBPASS }}"
+        priv: keystone.*:ALL
+        host: "{{ item }}"
+        state: present
+      with_items: "{{ DB_HOSTS }}"
+    - name: Stop keystone from starting automatically
+      command: echo "manual" > /etc/init/keystone.override
+    - name: Copy over keystone.conf
+      copy:
+        src: etc/keystone.conf.defaults
+        dest: /etc/keystone/keystone.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Add the admin token to keystone.conf
+      replace:
+        dest: /etc/keystone/keystone.conf
+        regexp: 'ADMIN_TOKEN'
+        replace: "{{ ADMIN_TOKEN }}"
+        backup: yes
+    - name: Configure database password in keystone.conf
+      replace:
+        dest: /etc/keystone/keystone.conf
+        regexp: 'KEYSTONE_DBPASS'
+        replace: "{{ KEYSTONE_DBPASS }}"
+    - name: Add the hostname to keystone.conf
+      replace:
+        dest: /etc/keystone/keystone.conf
+        regexp: 'CONTROLLER'
+        replace: "{{ ANSIBLE_FQDN }}"
+    - name: Populate the keystone database
+      command: /bin/sh -c "keystone-manage db_sync" keystone
+    - name: Update apache2.conf
+      lineinfile: 
+        dest: /etc/apache2/apache2.conf
+        insertafter: '^# Global configuration\n#\n'
+        line: 'ServerName {{ ANSIBLE_FQDN }}'
+    - name: Copy over wsgi-keystone.conf
+      copy:
+        src: etc/wsgi-keystone.conf.defaults
+        dest: /etc/apache2/sites-available/wsgi-keystone.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Enable the Identity service virtual hosts
+      file:
+        src: /etc/apache2/sites-available/wsgi-keystone.conf
+        dest: /etc/apache2/sites-enabled/wsgi-keystone.conf
+        owner: root
+        group: root
+        state: link
+    - name: Restart Apache
+      service:
+        name: apache2
+        enabled: yes
+        state: restarted
+    - name: Remove the SQLite database file
+      file:
+        path: /var/lib/keystone/keystone.db
+        state: absent
+...

@@ -1,0 +1,70 @@
+---
+# Do our basic host setup. Assumes that hosts already have 
+# correct IP addressing on all interfaces and have connectivity 
+# to the Ansible orchestrator host via their management 
+# interfaces. Uses the plain jane NTP client instead of chrony.
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-networking-controller.html
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-ntp-controller.html
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-packages.html
+# 
+- hosts: [all-hosts]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files: 
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+# Install our Openstack dependencies
+    - name: Install System Packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        install_recommends: yes
+      with_items: "{{ system_packages }}"
+    - name: Dist-Upgrade
+      apt: 
+        upgrade: dist
+    - name: Update python pip
+      command: 'pip install --upgrade pip'
+    - name: Install Openstack Ansible python module dependencies
+      pip:
+        name: "{{ item }}"
+      with_items:
+        - pytz
+        - shade
+        - MySQL-python
+    - name: Copy ntp.conf from our Ansible control box
+      copy:
+        src: etc/ntp.conf
+        dest: /etc/ntp.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Update ntp.conf; add server 1
+      replace:
+        dest: /etc/ntp.conf
+        regexp: 'NTP_SERVER1'
+        replace: "{{ NTP_SERVER1 }}"
+        backup: yes
+    - name: Update ntp.conf; add server 2
+      replace:
+        dest: /etc/ntp.conf
+        regexp: 'NTP_SERVER2'
+        replace: "{{ NTP_SERVER2 }}"
+        backup: yes
+    - name: Update hosts file
+      copy:
+        src: /etc/hosts
+        dest: /etc/hosts
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Restart NTP
+      service:
+        name: ntp
+        enabled: yes
+        state: restarted
+...

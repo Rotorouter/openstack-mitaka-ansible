@@ -1,0 +1,48 @@
+---
+# Add our NoSQL Database
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-nosql-database.html
+# Edit the /etc/mongodb.conf config file on the remote host
+# and replace ANSIBLE_MGMT_IP with the host management IP
+- hosts: [controllers]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files:
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Install the NoSQL database files
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        install_recommends: yes
+      with_items: "{{ nosql_db_packages }}"
+    - name: Copy NoSQL Configfile Template
+      copy:
+        src: etc/mongodb.conf.defaults
+        dest: /etc/mongodb.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Update the MongoDB Configfile
+      replace:
+        dest: /etc/mongodb.conf
+        regexp: 'ANSIBLE_MGMT_IP'
+        replace: "{{ ANSIBLE_MGMT_IP }}"
+        backup: yes
+    - name: Stop mongodb
+      service:
+        name: mysql
+        enabled: yes
+        state: stopped
+    - name: Clean up MongoDB prealloc.* files
+      file:
+        path: /var/lib/mongodb/journal/prealloc.*
+        state: absent
+    - name: Start mongodb
+      service:
+        name: mysql
+        enabled: yes
+        state: started
+...

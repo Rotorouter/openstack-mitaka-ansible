@@ -1,0 +1,38 @@
+---
+# Create the service entity and API endpoints
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/keystone-services.html
+- hosts: [controllers]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files: 
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Copy over our endpoint creation "script"
+      copy:
+        src: bin/keystone-api-endpoint.sh
+        dest: /home/{{ SYSADMIN_NAME }}/keystone-api-endpoint.sh
+        owner: root
+        group: root
+        mode: 0400
+        backup: no
+    - name: Update the endpoint creation script token
+      replace:
+        dest: /home/{{ SYSADMIN_NAME }}/keystone-api-endpoint.sh
+        regexp: 'ADMIN_TOKEN'
+        replace: "{{ ADMIN_TOKEN }}"
+        backup: no
+    - name: Update the endpoint creation script hostname
+      replace:
+        dest: /home/{{ SYSADMIN_NAME }}/keystone-api-endpoint.sh
+        regexp: 'CONTROLLER'
+        replace: "{{ ANSIBLE_FQDN }}"
+        backup: no
+    - name: Create the keystone service and API endpoint
+      command: /bin/bash /home/{{ SYSADMIN_NAME }}/keystone-api-endpoint.sh
+    - name: Remove our temporary script
+      file: 
+        path: /bin/bash /home/{{ SYSADMIN_NAME }}/keystone-api-endpoint.sh
+        state: absent
+...

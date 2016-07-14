@@ -1,0 +1,90 @@
+---
+# Our lovable sysadmin. This should be the login id 
+# for the account set up at OS setup time with Ubuntu
+# If the user account on the local management machine
+# is different from the one you would use to login to
+# the target client, you will need to statically set the 
+# name here.
+SYSADMIN_NAME: "{{ lookup('env','USER') }}"
+SYSADMIN_ENVIRONMENT:
+  - /home/{{ SYSADMIN_NAME }}/.bash_profile
+  - /home/{{ SYSADMIN_NAME }}/.bashrc
+  - /home/{{ SYSADMIN_NAME }}/.vimrc
+  - /home/{{ SYSADMIN_NAME }}/.keystone
+
+# Our default management IP address.
+ANSIBLE_MGMT_IP: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+# Our unqualified hostname
+ANSIBLE_FQDN: "{{ hostvars[inventory_hostname]['ansible_fqdn'] }}"
+
+# packages that should be installed on all Openstack hosts
+system_packages:
+  - aptitude
+  - python
+  - python-apt
+  - python-pip
+  - ntp
+  - software-properties-common
+  - python-openstackclient
+  - libmysqlclient-dev
+
+# Our NTP servers. You can either pick up the servers from your 
+# ansible facts (I assume your DNS servers == your NTP servers)
+# or you can put static values.
+NTP_SERVER1: "{{ hostvars[inventory_hostname]['ansible_dns']['nameservers'][0] }}"
+NTP_SERVER2: "{{ hostvars[inventory_hostname]['ansible_dns']['nameservers'][1] }}"
+#NTP_SERVER1: 172.16.3.13
+#NTP_SERVER2: 172.16.1.13
+
+# Packages to support the SQL database
+db_packages:
+  - mariadb-server
+  - python-pymysql
+
+# MariaDB files to change to UTF8
+mariadb_base_files:
+  - /etc/mysql/mariadb.conf.d/50-client.cnf
+  - /etc/mysql/mariadb.conf.d/50-mysql-clients.cnf
+  - /etc/mysql/mariadb.conf.d/50-server.cnf
+
+# Packages to support the NoSQL database
+nosql_db_packages:
+  - mongodb-server
+  - mongodb-clients
+  - python-pymongo
+
+# Packages to support the keystone identity service
+keystone_packages:
+  - python-mysqldb
+  - keystone
+  - apache2
+  - libapache2-mod-wsgi
+  - memcached
+  - python-memcache
+
+# Config files which should be identical across hosts. 
+# Do not put config files which require modification in here.
+static_conf_files: 
+  - etc/ntp.conf
+  - etc/hosts
+
+# Root directory to which to add static conf files on
+# the remote host.
+static_conf_dest: /etc/ 
+# The hosts to which we want to limit SQL database queries.
+DB_HOSTS:
+  - 127.0.0.1
+  - localhost
+  - ::1
+  - ctrl1.dom.local
+  - ctrl2.dom.local
+  - comp1.dom.local
+  - comp2.dom.local
+  - swift1.dom.local
+  - swift2.dom.local
+
+# Keystone variables
+OS_USERNAME: admin
+OS_AUTH_URL: http://{{ ANSIBLE_FQDN }}:35357/v3
+OS_IDENTITY_API_VERSION: 3
+...

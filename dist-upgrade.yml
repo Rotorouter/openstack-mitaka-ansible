@@ -1,0 +1,15 @@
+---
+- hosts: [all-hosts]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files:
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Update packages
+      apt: 
+        update_cache: yes 
+        install_recommends: yes
+        upgrade: dist
+...

@@ -1,0 +1,99 @@
+---
+# Install and set up our SQL databases
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-sql-database.html
+#
+- hosts: [controllers]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files:
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Install SQL DB Packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        install_recommends: yes
+      with_items: "{{ db_packages }}"
+    - name: Copy MariaDB Configfile Template
+      copy:
+        src: etc/mariadb.cnf.defaults
+        dest: /etc/mysql/mariadb.cnf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Copy MariaDB Openstack Configfile Template
+      copy:
+        src: etc/mysqld_openstack.cnf.defaults
+        dest: /etc/mysql/conf.d/mysqld_openstack.cnf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+
+# Add our bind-address to /etc/mysql/mariadb.cnf
+    - name: Update the MariaDB Configfile
+      replace:
+        dest: /etc/mysql/mariadb.cnf
+        regexp: 'ANSIBLE_MGMT_IP'
+        replace: "{{ ANSIBLE_MGMT_IP }}"
+
+# For the below hack see
+# https://bugs.launchpad.net/openstack-manuals/+bug/1575688
+# Only relevant to Ubuntu 16.04
+    - name: Update the MariaDB base configfiles for UTF8
+      replace:
+        dest: "{{ item }}"
+        regexp: 'utf8mb4'
+        replace: 'utf8'
+      with_items: "{{ mariadb_base_files }}"
+    - name: Restart mysql
+      service: 
+        name: mysql
+        enabled: yes
+        state: restarted
+
+# Run the equivalent of sudo mysql_secure_installation
+# Modified from https://github.com/PCextreme/ansible-role-mariadb/blob/master/tasks/mysql_secure_installation.yml
+    - name: Set MariaDB root Password
+      mysql_user:
+        name: root
+        host: "{{ item }}"
+        password: "{{ DB_PASS }}"
+        state: present
+      with_items: "{{ DB_HOSTS }}"
+    - name: Reload privilege tables
+      command: 'mysql -ne "{{ item }}"'
+      with_items:
+        - FLUSH PRIVILEGES
+      changed_when: False
+    - name: Remove anonymous users
+      mysql_user:
+        name: ''
+        state: absent
+      changed_when: False
+    - name: Disallow root login remotely
+      command: 'mysql -ne "{{ item }}"'
+      with_items:
+        - DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
+      changed_when: False
+    - name: Remove test database 
+      mysql_db:
+        name: test
+        login_user: root
+        login_password: "{{ DB_PASS }}"
+        state: absent
+    - name: Remove access to test database
+      command: 'mysql -ne "{{ item }}"'
+      with_items:
+        - DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%'
+      changed_when: False
+      ignore_errors: True
+    - name: Reload privilege tables
+      command: 'mysql -ne "{{ item }}"'
+      with_items:
+        - FLUSH PRIVILEGES
+      changed_when: False
+...
