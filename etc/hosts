@@ -41,11 +41,10 @@
 # leading 0s:
 
 ## db-[99:101]-node.example.com
-# Openstack Liberty Boxes
-[all-nodes]
+# Openstack Boxes
+[all-hosts]
 ctrl1.dom.local
 ctrl2.dom.local 
-ctrl3.dom.local
 swift1.dom.local
 swift2.dom.local
 comp1.dom.local
@@ -53,7 +52,6 @@ comp2.dom.local
 [controllers]
 ctrl1.dom.local
 ctrl2.dom.local
-ctrl3.dom.local
 [swift]
 swift1.dom.local
 swift2.dom.local
