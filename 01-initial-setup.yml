@@ -15,11 +15,17 @@
     - vars/vars.yml
     - vars/passwords.yml
   tasks:
+# Add our Mitaka repository
+    - name: Add the Mitaka Repository
+      apt_repository:
+        repo: cloud-archive:mitaka
+        state: present
+        update_cache: yes
 # Install our Openstack dependencies
     - name: Install System Packages
       apt:
         name: "{{ item }}"
-        update_cache: yes
+        update_cache: no
         install_recommends: yes
       with_items: "{{ system_packages }}"
     - name: Dist-Upgrade

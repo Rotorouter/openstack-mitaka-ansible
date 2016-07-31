@@ -1,6 +1,6 @@
 # openstack-mitaka-ansible
 
-A collection of Ansible playbooks and supporting files to build Openstack Mitaka. I developed it by hand from scratch as an Ansible learning exercise. The playbooks are written for Ansible 2.1 and all of the client hosts run Ubuntu 16.04. Any exceptions to the "developed from scratch" rule are noted in the relevant playbook.
+A collection of Ansible playbooks and supporting files to build Openstack Mitaka. I developed it by hand from scratch as an Ansible learning exercise. The playbooks are written for Ansible 2.1 and all of the client hosts run Ubuntu 14.04.4 LTS. Any exceptions to the "developed from scratch" rule are noted in the relevant playbook.
 
 There are 4 prerequisites to using the playbooks:
 1) Basic networking configured, including DNS, and have connectivity to your management machine and the Internet (for package installation, etc.) via their management port. This includes the special controller config for the provider network in /etc/network/interfaces; see http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-networking-controller.html.
