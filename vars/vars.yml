@@ -25,8 +25,10 @@ ANSIBLE_MGMT_IP: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['addre
 ANSIBLE_FQDN: "{{ hostvars[inventory_hostname]['ansible_fqdn'] }}"
 
 # packages that should be installed on all Openstack hosts
+# Skip open-vm-tools if you're not building on ESXi
 system_packages:
   - aptitude
+  - open-vm-tools
   - python
   - python-apt
   - python-pip

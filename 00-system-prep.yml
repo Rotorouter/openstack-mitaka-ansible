@@ -39,6 +39,7 @@
         manage_dir: yes
     - name: Dist-Upgrade
       apt:
+        update_cache: yes
         upgrade: dist
     - name: Reboot
       command: /sbin/shutdown -r +1
