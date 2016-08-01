@@ -1,0 +1,12 @@
+---
+- hosts: [all-hosts]
+  remote_user: "{{ SYSADMIN_NAME }}"
+  become: yes
+  become_method: sudo
+  vars_files:
+    - vars/vars.yml
+    - vars/passwords.yml
+  tasks:
+    - name: Shutdown the systems
+      command: /sbin/shutdown -h +1
+...

@@ -11,6 +11,13 @@ SYSADMIN_ENVIRONMENT:
   - /home/{{ SYSADMIN_NAME }}/.bashrc
   - /home/{{ SYSADMIN_NAME }}/.vimrc
   - /home/{{ SYSADMIN_NAME }}/.keystone
+SSH_KEY_FILE: "{{ lookup('env','HOME') }}/.ssh/id_rsa.pub"
+SSH_KEY: "{{ lookup('file', SSH_KEY_FILE) }}"
+
+# Our DNS Domain
+DOMAIN: dom.local
+# Our default controller node. Can be a single node or something like an F5 GTM WIP.
+CONTROLLER: ctrl1.dom.local
 
 # Our default management IP address.
 ANSIBLE_MGMT_IP: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"

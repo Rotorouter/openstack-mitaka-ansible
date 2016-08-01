@@ -20,26 +20,23 @@
         mode: 0600
         backup: no
       with_items: "{{ SYSADMIN_ENVIRONMENT }}"
-    - name: Update .keystone
+    - name: Update .keystone admin token
       replace:
         dest: /home/{{ SYSADMIN_NAME }}/.keystone
         regexp: 'ADMIN_TOKEN'
         replace: "{{ ADMIN_TOKEN }}"
         backup: no
-    - name: Update .keystone
+    - name: Update .keystone OS URL
       replace:
         dest: /home/{{ SYSADMIN_NAME }}/.keystone
-        regexp: 'ANSIBLE_FQDN'
-        replace: "{{ ANSIBLE_FQDN }}"
+        regexp: 'CONTROLLER'
+        replace: "{{ CONTROLLER }}"
         backup: no
     - name: Update SSH authorized_keys
-      copy:
-        src: /home/{{ SYSADMIN_NAME }}/.ssh/authorized_keys
-        dest: /home/{{ SYSADMIN_NAME }}/.ssh/authorized_keys
-        owner: "{{ SYSADMIN_NAME }}"
-        group: "{{ SYSADMIN_NAME }}"
-        mode: 0600
-        backup: no
+      authorized_key:
+        user: "{{ SYSADMIN_NAME }}"
+        key: "{{ SSH_KEY }}"
+        manage_dir: yes
     - name: Dist-Upgrade
       apt:
         upgrade: dist
