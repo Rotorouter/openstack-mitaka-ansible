@@ -1,6 +1,6 @@
 vars/clouds.yaml
 vars/passwords.yml
-01.5-pip.yml
+.01.5-pip.yml
 Python-2.7.12/
 bin/activate
 bin/activate.csh
