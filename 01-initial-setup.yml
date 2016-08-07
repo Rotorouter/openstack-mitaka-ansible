@@ -17,15 +17,12 @@
   tasks:
 # Add our Mitaka repository
     - name: Add the Mitaka Repository
-      apt_repository:
-        repo: cloud-archive:mitaka
-        state: present
-        update_cache: yes
+      command: add-apt-repository -y cloud-archive:mitaka
 # Install our Openstack dependencies
     - name: Install System Packages
       apt:
         name: "{{ item }}"
-        update_cache: no
+        update_cache: yes
         install_recommends: yes
       with_items: "{{ system_packages }}"
     - name: Dist-Upgrade

@@ -5,7 +5,7 @@ A collection of Ansible playbooks and supporting files to build Openstack Mitaka
 There are 4 prerequisites to using the playbooks:
 1) Basic networking configured, including DNS, and have connectivity to your management machine and the Internet (for package installation, etc.) via their management port. This includes the special controller config for the provider network in /etc/network/interfaces; see http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-networking-controller.html.
 2) A working DNS in your environment, or names of the target machines entered in /etc/hosts on the machine where you intend to run the playbooks.
-3) Install python. The minimal Ubuntu 16.04 install does not include this.
+3) Install python. The minimal Ubuntu 14.04 install does not include python.
 4) (Optional) Run ssh-keygen on each of your target machines so you can use ssh key authentication from any host to any host. Add the public key from each machine to .ssh/authorized_hosts on the machine where you will be running the playbooks.
 
 Directory structure:
