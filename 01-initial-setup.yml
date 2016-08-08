@@ -28,15 +28,7 @@
     - name: Dist-Upgrade
       apt: 
         upgrade: dist
-    - name: Update python pip
-      command: 'pip install --upgrade pip'
-#    - name: Install Openstack Ansible python module dependencies
-#      pip:
-#        name: "{{ item }}"
-#      with_items:
-#        - pytz
-#        - shade
-#        - MySQL-python
+# NTP and DNS
     - name: Copy ntp.conf from our Ansible control box
       copy:
         src: etc/ntp.conf
