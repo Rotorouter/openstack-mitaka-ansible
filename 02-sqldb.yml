@@ -1,6 +1,7 @@
 ---
 # Install and set up our SQL databases
 # http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-sql-database.html
+# Validated 2016/8/7
 #
 - hosts: [controllers]
   remote_user: "{{ SYSADMIN_NAME }}"
