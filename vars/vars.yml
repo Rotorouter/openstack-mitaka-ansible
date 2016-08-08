@@ -111,5 +111,5 @@ static_conf_dest: /etc/
 # The hosts to which we want to limit SQL database queries.
 DB_HOSTS:
   - 127.0.0.1
-  - localhost
   - ::1
+  - localhost

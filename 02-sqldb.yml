@@ -16,39 +16,29 @@
         update_cache: yes
         install_recommends: yes
       with_items: "{{ db_packages }}"
-    - name: Copy MariaDB Configfile Template
-      copy:
-        src: etc/mariadb.cnf.defaults
-        dest: /etc/mysql/mariadb.cnf
-        owner: root
-        group: root
-        mode: 0644
-        backup: yes
+#    - name: Copy MariaDB Configfile Template
+#      copy:
+#        src: etc/mariadb.cnf.defaults
+#        dest: /etc/mysql/mariadb.cnf
+#        owner: root
+#        group: root
+#        mode: 0644
+#        backup: yes
     - name: Copy MariaDB Openstack Configfile Template
       copy:
         src: etc/mysqld_openstack.cnf.defaults
-        dest: /etc/mysql/conf.d/mysqld_openstack.cnf
+        dest: /etc/mysql/conf.d/openstack.cnf
         owner: root
         group: root
         mode: 0644
         backup: yes
 
-# Add our bind-address to /etc/mysql/mariadb.cnf
-    - name: Update the MariaDB Configfile
+# Add our bind-address to /etc/mysql/conf.d/openstack.cnf
+    - name: Update the MariaDB Openstack Configfile
       replace:
-        dest: /etc/mysql/mariadb.cnf
+        dest: /etc/mysql/conf.d/openstack.cnf
         regexp: 'ANSIBLE_MGMT_IP'
         replace: "{{ ANSIBLE_MGMT_IP }}"
-
-# For the below hack see
-# https://bugs.launchpad.net/openstack-manuals/+bug/1575688
-# Only relevant to Ubuntu 16.04
-    - name: Update the MariaDB base configfiles for UTF8
-      replace:
-        dest: "{{ item }}"
-        regexp: 'utf8mb4'
-        replace: 'utf8'
-      with_items: "{{ mariadb_base_files }}"
     - name: Restart mysql
       service: 
         name: mysql
@@ -56,7 +46,8 @@
         state: restarted
 
 # Run the equivalent of sudo mysql_secure_installation
-# Modified from https://github.com/PCextreme/ansible-role-mariadb/blob/master/tasks/mysql_secure_installation.yml
+# Adapted from https://github.com/PCextreme/ansible-role-mariadb/blob/master/tasks/mysql_secure_installation.yml
+# 
     - name: Set MariaDB root Password
       mysql_user:
         name: root
@@ -64,6 +55,19 @@
         password: "{{ DB_PASS }}"
         state: present
       with_items: "{{ DB_HOSTS }}"
+    - name: Copy ~/.my.cnf
+      copy:
+        src: etc/mysql.my.cnf.defaults
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: 0600
+        backup: yes
+    - name: Update /root/.my.cnf
+      replace:
+        dest: /root/.my.cnf
+        regexp: 'DB_PASS'
+        replace: "{{ DB_PASS }}"
     - name: Reload privilege tables
       command: 'mysql -ne "{{ item }}"'
       with_items:
