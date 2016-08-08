@@ -1,6 +1,7 @@
 ---
 # Add our NoSQL Database
 # http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-nosql-database.html
+# Validated 2016/8/7
 # Edit the /etc/mongodb.conf config file on the remote host
 # and replace ANSIBLE_MGMT_IP with the host management IP
 - hosts: [controllers]
