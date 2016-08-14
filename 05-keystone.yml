@@ -1,7 +1,8 @@
 ---
 # Install Keystone
+# http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-memcached.html
 # http://docs.openstack.org/mitaka/install-guide-ubuntu/keystone-install.html
-#
+# Updated for Mitaka 2016/8/14
 - hosts: [controllers]
   remote_user: "{{ SYSADMIN_NAME }}"
   become: yes
@@ -10,15 +11,36 @@
     - vars/vars.yml
     - vars/passwords.yml
   tasks:
-    - name: Install necessary packages
+    - name: Install memcached packages
       apt:
         name: "{{ item }}"
         update_cache: yes
         install_recommends: yes
-      with_items: "{{ keystone_packages }}"
+      with_items: 
+        - memcached
+        - python-memcache
+    - name: Copy over the memcached.conf template
+      copy:
+        src: etc/memcached.conf.defaults
+        dest: /etc/memcached.conf
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Update the memcached Configfile
+      replace:
+        dest: /etc/memcached.conf
+        regexp: 'ANSIBLE_MGMT_IP'
+        replace: "{{ ANSIBLE_MGMT_IP }}"
+    - name: Restart memcached
+      service:
+        name: memcached
+        state: restarted
+        enabled: yes
     - name: Create the keystone Database
       mysql_db:
         name: keystone
+        state: present
         login_user: root
         login_password: "{{ DB_PASS }}"
     - name: Create the keystone user 
@@ -31,7 +53,18 @@
       with_items: "{{ DB_HOSTS }}"
     - name: Stop keystone from starting automatically
       command: echo "manual" > /etc/init/keystone.override
-    - name: Copy over keystone.conf
+    - name: Shut down the Keystone service
+      service:
+        name: keystone
+        enabled: no
+        state: stopped
+    - name: Install necessary packages
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        install_recommends: yes
+      with_items: "{{ keystone_packages }}"
+    - name: Copy over keystone.conf template
       copy:
         src: etc/keystone.conf.defaults
         dest: /etc/keystone/keystone.conf
@@ -57,11 +90,21 @@
         replace: "{{ ANSIBLE_FQDN }}"
     - name: Populate the keystone database
       command: /bin/sh -c "keystone-manage db_sync" keystone
-    - name: Update apache2.conf
-      lineinfile: 
+    - name: Initialize Fernet Keys
+      command: keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+    - name: Copy over apache2.conf
+      copy:
+        src: etc/apache2.conf.defaults
         dest: /etc/apache2/apache2.conf
-        insertafter: '^# Global configuration\n#\n'
-        line: 'ServerName {{ ANSIBLE_FQDN }}'
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+    - name: Update apache2.conf
+      replace: 
+        dest: /etc/apache2/apache2.conf
+        regexp: 'ANSIBLE_FQDN'
+        replace: "{{ ANSIBLE_FQDN }}"
     - name: Copy over wsgi-keystone.conf
       copy:
         src: etc/wsgi-keystone.conf.defaults
@@ -72,10 +115,8 @@
         backup: yes
     - name: Enable the Identity service virtual hosts
       file:
-        src: /etc/apache2/sites-available/wsgi-keystone.conf
         dest: /etc/apache2/sites-enabled/wsgi-keystone.conf
-        owner: root
-        group: root
+        src: /etc/apache2/sites-available/wsgi-keystone.conf
         state: link
     - name: Restart Apache
       service:
