@@ -107,6 +107,5 @@ static_conf_files:
 static_conf_dest: /etc/ 
 # The hosts to which we want to limit SQL database queries.
 DB_HOSTS:
-  - 127.0.0.1
-  - ::1
   - localhost
+  - "{{ ANSIBLE_FQDN }}"
