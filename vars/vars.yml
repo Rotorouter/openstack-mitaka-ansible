@@ -92,12 +92,9 @@ nosql_db_packages:
 
 # Packages to support the keystone identity service
 keystone_packages:
-  - python-mysqldb
   - keystone
   - apache2
   - libapache2-mod-wsgi
-  - memcached
-  - python-memcache
 
 # Config files which should be identical across hosts. 
 # Do not put config files which require modification in here.
