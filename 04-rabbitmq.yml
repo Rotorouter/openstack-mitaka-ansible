@@ -1,6 +1,7 @@
 ---
 # Installing the message bus
 # http://docs.openstack.org/mitaka/install-guide-ubuntu/environment-messaging.html
+# Validated for Mitaka 2016/8/14
 - hosts: [controllers]
   remote_user: "{{ SYSADMIN_NAME }}"
   become: yes
